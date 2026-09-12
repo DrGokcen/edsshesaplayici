@@ -191,9 +191,33 @@
     padding:14px 16px 14px 19px;
     border-bottom:1px solid var(--line-soft);
     cursor:pointer;
-    transition:background .15s ease;
+    opacity:0;
+    transform:translateY(6px) scale(.99);
+    transition:background .15s ease, opacity .45s cubic-bezier(.4,0,.2,1), transform .45s cubic-bezier(.4,0,.2,1);
     -webkit-tap-highlight-color:transparent;
   }
+  section.block.in-view .opt{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+  section.block.in-view .opt:active{
+    transform:scale(.985);
+  }
+  /* stagger only the reveal (opacity/transform); background stays instant for tap feedback */
+  .opt:nth-child(1){transition-delay:0s, 0s, 0s;}
+  .opt:nth-child(2){transition-delay:0s, .035s, .035s;}
+  .opt:nth-child(3){transition-delay:0s, .07s, .07s;}
+  .opt:nth-child(4){transition-delay:0s, .105s, .105s;}
+  .opt:nth-child(5){transition-delay:0s, .14s, .14s;}
+  .opt:nth-child(6){transition-delay:0s, .175s, .175s;}
+  .opt:nth-child(7){transition-delay:0s, .21s, .21s;}
+  .opt:nth-child(8){transition-delay:0s, .245s, .245s;}
+  .opt:nth-child(9){transition-delay:0s, .28s, .28s;}
+  .opt:nth-child(10){transition-delay:0s, .315s, .315s;}
+  .opt:nth-child(11){transition-delay:0s, .35s, .35s;}
+  .opt:nth-child(12){transition-delay:0s, .385s, .385s;}
+  .opt:nth-child(13){transition-delay:0s, .42s, .42s;}
+  .opt:nth-child(14){transition-delay:0s, .455s, .455s;}
   .opt::before{
     content:"";
     position:absolute;
@@ -237,6 +261,7 @@
   }
   .opt.checked{
     background:var(--gold-tint);
+    box-shadow:inset 0 0 0 1px rgba(169,121,31,.18);
   }
   .opt.checked::before{opacity:1;}
   .opt .txt{
@@ -317,12 +342,25 @@
     background:linear-gradient(90deg, #2B5D4C, #93924F 45%, #B8862E 65%, #9A3C2E);
     opacity:.35;
     z-index:0;
+    transform-origin:left center;
+    animation:lineGrow .9s cubic-bezier(.4,0,.2,1) both;
+  }
+  @keyframes lineGrow{
+    from{transform:scaleX(0);}
+    to{transform:scaleX(1);}
   }
   .legend-stop{
     flex:1;
     display:flex;
     justify-content:center;
     position:relative;
+    opacity:0;
+    animation:legendIn .55s cubic-bezier(.4,0,.2,1) both;
+    animation-delay:var(--d, 0s);
+  }
+  @keyframes legendIn{
+    from{opacity:0; transform:translateY(8px) scale(.92);}
+    to{opacity:1; transform:translateY(0) scale(1);}
   }
   .legend-circle{
     width:40px;
@@ -395,6 +433,7 @@
     box-shadow:0 -10px 30px rgba(0,0,0,.16);
     z-index:50;
     border-top:1px solid rgba(255,255,255,.08);
+    transition:background .6s ease;
   }
   .result-inner{
     max-width:740px;
@@ -544,6 +583,8 @@
 
   <footer class="note">
     <strong>Not:</strong> Bu araç, Kurtzke EDSS/FSS ölçeğinin kural tabanlı bir yaklaşımıdır; sınırda kalan (borderline) kombinasyonlarda nihai puanlama klinik değerlendirmeyi gerektirir. Resmi bir tıbbi cihaz ya da onaylı bir hesaplayıcının birebir kopyası değildir; sonuçlar tedavi kararlarında tek başına kullanılmamalıdır.
+    <br><br>
+    <strong>Kaynak:</strong> Kurtzke JF. Rating neurologic impairment in multiple sclerosis: an expanded disability status scale (EDSS). <em>Neurology.</em> 1983;33(11):1444–1452. EDSS/FSS ölçeğinin kendisi kamuya açık (public domain) bilimsel bir standarttır; bu uygulama söz konusu yayındaki tanımlardan yola çıkılarak bağımsız olarak geliştirilmiştir.
   </footer>
 </div>
 
@@ -704,6 +745,7 @@ function buildOverview(){
   OVERVIEW.forEach((it, i)=>{
     const stop = document.createElement("div");
     stop.className = "legend-stop " + (i % 2 === 0 ? "near" : "far");
+    stop.style.setProperty("--d", (i * 0.055) + "s");
 
     if(it.icon){
       const icon = document.createElement("div");
@@ -803,12 +845,21 @@ buildGroup("grp-cerebral","cerebral",FS.cerebral,false);
 buildGroup("grp-other","other",FS.other,false);
 
 function fsCandidate(){
-  // cerebral grade 1 due to mood alone does not count toward disability
+  if(state.pyramidal===null || state.pyramidal===undefined ||
+     state.cerebellar===null || state.cerebellar===undefined ||
+     state.brainstem===null || state.brainstem===undefined ||
+     state.sensory===null || state.sensory===undefined ||
+     state.bowel===null || state.bowel===undefined ||
+     state.visual===null || state.visual===undefined ||
+     state.cerebral===null || state.cerebral===undefined) return null;
+
+  // Kurtzke's scale explicitly excludes cerebral grade 1 (mood change alone) from the
+  // disability count used to derive the EDSS step — it only counts at grade 2 and above.
+  const cerebralForCount = state.cerebral === 1 ? 0 : state.cerebral;
   const scores = [
     state.pyramidal, state.cerebellar, state.brainstem,
-    state.sensory, state.bowel, state.visual, state.cerebral
+    state.sensory, state.bowel, state.visual, cerebralForCount
   ];
-  if(scores.some(s=>s===null || s===undefined)) return null;
 
   const max = Math.max(...scores);
   const c1 = scores.filter(s=>s===1).length;
@@ -824,11 +875,61 @@ function fsCandidate(){
     return 3.5;
   }
   if(max===3){
-    if(c3===1 && c2<=1) return 3;
-    return 3.5;
+    // 3.0: one FS grade 3, all others 0-1 (no FS at grade 2)
+    if(c3===1 && c2===0) return 3;
+    // 3.5: one FS grade 3 with one-or-two FS grade 2, OR two FS grade 3
+    if(c3===2 || (c3===1 && c2>=1 && c2<=2)) return 3.5;
+    // combinations exceeding the defined 3.5 patterns (e.g. 3+ FS at grade 3)
+    return 4;
   }
   if(max===4) return 4;
   return 4.5;
+}
+
+let displayedScore = null;
+
+function hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
+
+function colorForScore(score){
+  const clamped = Math.min(10, Math.max(0, score));
+  const lo = Math.floor(clamped);
+  const hi = Math.min(10, lo + 1);
+  const t = clamped - lo;
+  const c1 = hexToRgb(OVERVIEW_COLORS[lo]);
+  const c2 = hexToRgb(OVERVIEW_COLORS[hi]);
+  return {
+    r: Math.round(c1.r + (c2.r - c1.r) * t),
+    g: Math.round(c1.g + (c2.g - c1.g) * t),
+    b: Math.round(c1.b + (c2.b - c1.b) * t)
+  };
+}
+
+function animateScoreTo(target){
+  const el = document.getElementById("resultScore");
+  if(displayedScore === null || displayedScore === target){
+    el.textContent = fmt(target);
+    displayedScore = target;
+    return;
+  }
+  const start = displayedScore;
+  const startTime = performance.now();
+  const duration = 380;
+  function step(now){
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const current = start + (target - start) * eased;
+    el.textContent = fmt(current);
+    if(t < 1){
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = fmt(target);
+      displayedScore = target;
+    }
+  }
+  requestAnimationFrame(step);
 }
 
 function compute(){
@@ -837,12 +938,15 @@ function compute(){
   const scoreEl = document.getElementById("resultScore");
   const descEl = document.getElementById("resultDesc");
   const basisEl = document.getElementById("resultBasis");
+  const resultBar = document.querySelector(".result-bar");
 
   if(fsCand === null || amb === null){
     scoreEl.textContent = "—";
     scoreEl.classList.add("pending");
     descEl.textContent = "Sonuç için yürüme durumunu ve yedi fonksiyonel sistemi işaretleyin.";
     basisEl.textContent = "";
+    resultBar.style.background = "";
+    displayedScore = null;
     return;
   }
 
@@ -864,11 +968,13 @@ function compute(){
     basis = "Fonksiyonel sistem ve yürüme değerlendirmesi uyumlu.";
   }
 
-  scoreEl.textContent = fmt(final);
   scoreEl.classList.remove("pending");
   scoreEl.classList.remove("pop");
   void scoreEl.offsetWidth;
   scoreEl.classList.add("pop");
+  animateScoreTo(final);
+  const col = colorForScore(final);
+  resultBar.style.background = `linear-gradient(180deg, rgba(${col.r},${col.g},${col.b},.93), rgba(${Math.round(col.r*0.72)},${Math.round(col.g*0.72)},${Math.round(col.b*0.72)},.96))`;
   descEl.textContent = RESULT_DESC[key(final)] || "";
   basisEl.textContent = basis;
 }
