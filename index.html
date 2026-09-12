@@ -318,73 +318,36 @@
     color:var(--ink-faint);
   }
 
-  /* overview timeline */
-  .legend-scroll{
-    overflow-x:auto;
-    margin-top:10px;
-    padding-bottom:6px;
-    -webkit-overflow-scrolling:touch;
-  }
-  .legend-row{
+  /* overview timeline (vertical, no scrolling — everything visible at once) */
+  .legend-list{
     display:flex;
-    position:relative;
-    min-width:660px;
-    padding:66px 4px 92px;
+    flex-direction:column;
+    margin-top:12px;
   }
-  .legend-row::before{
-    content:"";
-    position:absolute;
-    left:26px;
-    right:26px;
-    top:88px;
-    height:2px;
-    border-radius:2px;
-    background:linear-gradient(90deg, #2B5D4C, #93924F 45%, #B8862E 65%, #9A3C2E);
-    opacity:.35;
-    z-index:0;
-    transform-origin:left center;
-    animation:lineGrow .9s cubic-bezier(.4,0,.2,1) both;
-  }
-  @keyframes lineGrow{
-    from{transform:scaleX(0);}
-    to{transform:scaleX(1);}
-  }
-  .legend-stop{
-    flex:1;
+  .legend-item{
     display:flex;
-    justify-content:center;
-    position:relative;
+    align-items:stretch;
+    gap:13px;
     opacity:0;
-    animation:legendIn .55s cubic-bezier(.4,0,.2,1) both;
+    animation:legendIn .5s cubic-bezier(.4,0,.2,1) both;
     animation-delay:var(--d, 0s);
   }
   @keyframes legendIn{
-    from{opacity:0; transform:translateY(8px) scale(.92);}
-    to{opacity:1; transform:translateY(0) scale(1);}
+    from{opacity:0; transform:translateX(-6px);}
+    to{opacity:1; transform:translateX(0);}
   }
-  .legend-circle{
-    width:40px;
-    height:40px;
-    border-radius:50%;
+  .legend-marker{
     display:flex;
+    flex-direction:column;
     align-items:center;
-    justify-content:center;
-    color:#fff;
-    font-family:var(--mono);
-    font-weight:500;
-    font-size:14px;
-    position:relative;
-    z-index:1;
-    box-shadow:0 0 0 5px var(--paper), 0 3px 8px rgba(30,36,32,.18);
+    flex:0 0 auto;
+    width:34px;
   }
   .legend-icon{
-    position:absolute;
-    bottom:100%;
-    left:50%;
-    transform:translateX(-50%);
-    margin-bottom:10px;
-    width:30px;
-    height:30px;
+    width:21px;
+    height:21px;
+    margin-bottom:6px;
+    flex:0 0 auto;
     -webkit-mask-repeat:no-repeat;
     mask-repeat:no-repeat;
     -webkit-mask-position:center;
@@ -392,33 +355,47 @@
     -webkit-mask-size:contain;
     mask-size:contain;
   }
-  .legend-connector{
-    position:absolute;
-    top:100%;
-    left:50%;
-    width:1px;
-    background:var(--line);
-    transform:translateX(-50%);
+  .legend-circle{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-family:var(--mono);
+    font-weight:500;
+    font-size:12.5px;
+    flex:0 0 auto;
   }
-  .legend-stop.near .legend-connector{ height:10px; }
-  .legend-stop.far .legend-connector{ height:54px; }
+  .legend-connector{
+    width:2px;
+    flex:1;
+    min-height:10px;
+    margin:5px 0;
+    border-radius:1px;
+    background:var(--line);
+  }
+  .legend-item.last .legend-connector{
+    visibility:hidden;
+  }
+  .legend-content{
+    flex:1;
+    min-width:0;
+    padding:5px 0 20px;
+  }
+  .legend-item.last .legend-content{
+    padding-bottom:2px;
+  }
   .legend-label{
-    position:absolute;
-    top:100%;
-    left:50%;
-    transform:translateX(-50%);
-    width:104px;
-    text-align:center;
-    font-size:11px;
-    line-height:1.35;
+    font-size:13.5px;
+    line-height:1.4;
     color:var(--ink-soft);
   }
-  .legend-stop.near .legend-label{ margin-top:16px; }
-  .legend-stop.far .legend-label{ margin-top:60px; }
   .legend-caption{
     font-size:12px;
     color:var(--ink-faint);
-    margin-top:2px;
+    margin-top:6px;
   }
 
   /* result bar */
@@ -519,9 +496,7 @@
   <section class="block in-view" style="border-top:none; margin-top:8px; padding-top:0;">
     <div class="block-head"><h2>EDSS skoruna genel bakış</h2></div>
     <p class="sub">Ölçeğin tam sayı basamaklarının kabaca ne anlama geldiğini gösterir.</p>
-    <div class="legend-scroll">
-      <div class="legend-row" id="legendRow"></div>
-    </div>
+    <div class="legend-list" id="legendList"></div>
     <p class="legend-caption">Yarım puanlık ara basamaklar (0,5; 1,5; 2,5 …) aşağıdaki fonksiyonel sistem değerlendirmesiyle belirlenir.</p>
   </section>
 
@@ -741,11 +716,14 @@ const ICON_DATA = {
 };
 
 function buildOverview(){
-  const row = document.getElementById("legendRow");
+  const list = document.getElementById("legendList");
   OVERVIEW.forEach((it, i)=>{
-    const stop = document.createElement("div");
-    stop.className = "legend-stop " + (i % 2 === 0 ? "near" : "far");
-    stop.style.setProperty("--d", (i * 0.055) + "s");
+    const item = document.createElement("div");
+    item.className = "legend-item" + (i === OVERVIEW.length - 1 ? " last" : "");
+    item.style.setProperty("--d", (i * 0.045) + "s");
+
+    const marker = document.createElement("div");
+    marker.className = "legend-marker";
 
     if(it.icon){
       const icon = document.createElement("div");
@@ -754,25 +732,30 @@ function buildOverview(){
       const url = `url(${ICON_DATA[it.icon]})`;
       icon.style.webkitMaskImage = url;
       icon.style.maskImage = url;
-      stop.appendChild(icon);
+      marker.appendChild(icon);
     }
 
     const circle = document.createElement("div");
     circle.className = "legend-circle";
     circle.style.background = OVERVIEW_COLORS[i];
     circle.textContent = it.n;
-    stop.appendChild(circle);
+    marker.appendChild(circle);
 
     const connector = document.createElement("div");
     connector.className = "legend-connector";
-    stop.appendChild(connector);
+    marker.appendChild(connector);
 
+    item.appendChild(marker);
+
+    const content = document.createElement("div");
+    content.className = "legend-content";
     const label = document.createElement("div");
     label.className = "legend-label";
     label.textContent = it.label;
-    stop.appendChild(label);
+    content.appendChild(label);
+    item.appendChild(content);
 
-    row.appendChild(stop);
+    list.appendChild(item);
   });
 }
 buildOverview();
