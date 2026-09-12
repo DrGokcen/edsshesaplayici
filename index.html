@@ -331,6 +331,13 @@
     min-width:776px;
     padding:66px 64px 92px 60px;
   }
+  /* wide enough (tablet/desktop): fill the available width exactly, no scrolling needed at all */
+  @media (min-width:660px){
+    .legend-row{
+      min-width:0;
+      width:100%;
+    }
+  }
   .legend-row::before{
     content:"";
     position:absolute;
@@ -415,6 +422,19 @@
   }
   .legend-stop.near .legend-label{ margin-top:16px; }
   .legend-stop.far .legend-label{ margin-top:60px; }
+  /* first/last labels anchor inward instead of centering past the row's own edge —
+     guarantees the "MS'e bağlı ölüm" label always stays fully inside the row, on any screen width */
+  .legend-stop:first-child .legend-label{
+    left:0;
+    transform:none;
+    text-align:left;
+  }
+  .legend-stop:last-child .legend-label{
+    left:auto;
+    right:0;
+    transform:none;
+    text-align:right;
+  }
   .legend-caption{
     font-size:12px;
     color:var(--ink-faint);
