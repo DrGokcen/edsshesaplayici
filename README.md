@@ -25,11 +25,12 @@ Bu araç, Kurtzke'nin (1983) tanımladığı EDSS/FSS ölçeğinin kural tabanl�
 
 > Kurtzke JF. Rating neurologic impairment in multiple sclerosis: an expanded disability status scale (EDSS). *Neurology.* 1983;33(11):1444–1452.
 
-EDSS/FSS ölçeğinin kendisi kamuya açık (public domain) bilimsel bir standarttır. Bu proje, söz konusu yayındaki tanımlardan yola çıkılarak bağımsız olarak geliştirilmiştir; herhangi bir ticari hesaplayıcı (ör. MDCalc) ile bağlantılı değildir ve onların metin, tasarım ya da kodunu kullanmaz.
+EDSS/FSS ölçeğinin kendisi kamuya açık (public domain) bilimsel bir standarttır. Bu proje, söz konusu yayındaki tanımlardan yola çıkılarak bağımsız olarak geliştirilmiştir; herhangi bir ticari hesaplayıcı ile bağlantılı değildir ve onların metin, tasarım ya da kodunu kullanmaz.
 
 ## Sorumluluk Reddi
 
 Bu araç, Kurtzke EDSS/FSS ölçeğinin kural tabanlı bir yaklaşımıdır; sınırda kalan kombinasyonlarda nihai puanlama klinik değerlendirme gerektirir. Resmi bir tıbbi cihaz ya da onaylı/sertifikalı bir hesaplayıcının birebir kopyası değildir. Sonuçlar, tedavi kararlarında tek başına kullanılmamalıdır.
+
 
 ## Sürüm
 
