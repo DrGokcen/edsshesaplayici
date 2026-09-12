@@ -8,16 +8,16 @@
   :root{
     --ink:#1E2420;
     --ink-soft:#4B564E;
-    --ink-faint:#7C8A7D;
-    --paper:#EDF0E8;
+    --ink-faint:#8A8C7E;
+    --paper:#F3EEE4;
     --panel:#FFFFFF;
-    --line:#DBE1D3;
-    --line-soft:#E7EBE0;
+    --line:#E2DBCB;
+    --line-soft:#EDE7D8;
     --forest:#2B5D4C;
     --forest-deep:#1E4238;
-    --forest-tint:#E3EBE3;
+    --forest-tint:#E7EBDD;
     --gold:#A9791F;
-    --gold-tint:#F6EFDB;
+    --gold-tint:#F8F0DC;
     --danger:#8C3A2B;
     --shadow-card:0 1px 2px rgba(30,36,32,.04), 0 8px 20px -12px rgba(30,36,32,.14);
     --shadow-lift:0 4px 10px rgba(30,36,32,.06), 0 20px 40px -20px rgba(30,36,32,.22);
@@ -318,46 +318,53 @@
     color:var(--ink-faint);
   }
 
-  /* overview timeline (vertical, no scrolling — everything visible at once) */
-  .legend-list{
-    display:flex;
-    flex-direction:column;
-    margin-top:12px;
+  /* overview timeline (horizontal, roomy — scrollable but nothing ever clipped) */
+  .legend-scroll{
+    overflow-x:auto;
+    margin-top:10px;
+    padding-bottom:6px;
+    -webkit-overflow-scrolling:touch;
   }
-  .legend-item{
+  .legend-row{
     display:flex;
-    align-items:stretch;
-    gap:13px;
+    position:relative;
+    min-width:776px;
+    padding:66px 64px 92px 60px;
+  }
+  .legend-row::before{
+    content:"";
+    position:absolute;
+    left:82px;
+    right:86px;
+    top:88px;
+    height:2px;
+    border-radius:2px;
+    background:linear-gradient(90deg, #2B5D4C, #93924F 45%, #B8862E 65%, #9A3C2E);
+    opacity:.35;
+    z-index:0;
+    transform-origin:left center;
+    animation:lineGrow .9s cubic-bezier(.4,0,.2,1) both;
+  }
+  @keyframes lineGrow{
+    from{transform:scaleX(0);}
+    to{transform:scaleX(1);}
+  }
+  .legend-stop{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    position:relative;
     opacity:0;
-    animation:legendIn .5s cubic-bezier(.4,0,.2,1) both;
+    animation:legendIn .55s cubic-bezier(.4,0,.2,1) both;
     animation-delay:var(--d, 0s);
   }
   @keyframes legendIn{
-    from{opacity:0; transform:translateX(-6px);}
-    to{opacity:1; transform:translateX(0);}
-  }
-  .legend-marker{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    flex:0 0 auto;
-    width:34px;
-  }
-  .legend-icon{
-    width:21px;
-    height:21px;
-    margin-bottom:6px;
-    flex:0 0 auto;
-    -webkit-mask-repeat:no-repeat;
-    mask-repeat:no-repeat;
-    -webkit-mask-position:center;
-    mask-position:center;
-    -webkit-mask-size:contain;
-    mask-size:contain;
+    from{opacity:0; transform:translateY(8px) scale(.92);}
+    to{opacity:1; transform:translateY(0) scale(1);}
   }
   .legend-circle{
-    width:34px;
-    height:34px;
+    width:40px;
+    height:40px;
     border-radius:50%;
     display:flex;
     align-items:center;
@@ -365,37 +372,53 @@
     color:#fff;
     font-family:var(--mono);
     font-weight:500;
-    font-size:12.5px;
-    flex:0 0 auto;
+    font-size:14px;
+    position:relative;
+    z-index:1;
+    box-shadow:0 0 0 5px var(--paper), 0 3px 8px rgba(30,36,32,.18);
+  }
+  .legend-icon{
+    position:absolute;
+    bottom:100%;
+    left:50%;
+    transform:translateX(-50%);
+    margin-bottom:10px;
+    width:30px;
+    height:30px;
+    -webkit-mask-repeat:no-repeat;
+    mask-repeat:no-repeat;
+    -webkit-mask-position:center;
+    mask-position:center;
+    -webkit-mask-size:contain;
+    mask-size:contain;
   }
   .legend-connector{
-    width:2px;
-    flex:1;
-    min-height:10px;
-    margin:5px 0;
-    border-radius:1px;
+    position:absolute;
+    top:100%;
+    left:50%;
+    width:1px;
     background:var(--line);
+    transform:translateX(-50%);
   }
-  .legend-item.last .legend-connector{
-    visibility:hidden;
-  }
-  .legend-content{
-    flex:1;
-    min-width:0;
-    padding:5px 0 20px;
-  }
-  .legend-item.last .legend-content{
-    padding-bottom:2px;
-  }
+  .legend-stop.near .legend-connector{ height:10px; }
+  .legend-stop.far .legend-connector{ height:54px; }
   .legend-label{
-    font-size:13.5px;
-    line-height:1.4;
+    position:absolute;
+    top:100%;
+    left:50%;
+    transform:translateX(-50%);
+    width:104px;
+    text-align:center;
+    font-size:11px;
+    line-height:1.35;
     color:var(--ink-soft);
   }
+  .legend-stop.near .legend-label{ margin-top:16px; }
+  .legend-stop.far .legend-label{ margin-top:60px; }
   .legend-caption{
     font-size:12px;
     color:var(--ink-faint);
-    margin-top:6px;
+    margin-top:2px;
   }
 
   /* result bar */
@@ -496,7 +519,9 @@
   <section class="block in-view" style="border-top:none; margin-top:8px; padding-top:0;">
     <div class="block-head"><h2>EDSS skoruna genel bakış</h2></div>
     <p class="sub">Ölçeğin tam sayı basamaklarının kabaca ne anlama geldiğini gösterir.</p>
-    <div class="legend-list" id="legendList"></div>
+    <div class="legend-scroll">
+      <div class="legend-row" id="legendRow"></div>
+    </div>
     <p class="legend-caption">Yarım puanlık ara basamaklar (0,5; 1,5; 2,5 …) aşağıdaki fonksiyonel sistem değerlendirmesiyle belirlenir.</p>
   </section>
 
@@ -716,14 +741,11 @@ const ICON_DATA = {
 };
 
 function buildOverview(){
-  const list = document.getElementById("legendList");
+  const row = document.getElementById("legendRow");
   OVERVIEW.forEach((it, i)=>{
-    const item = document.createElement("div");
-    item.className = "legend-item" + (i === OVERVIEW.length - 1 ? " last" : "");
-    item.style.setProperty("--d", (i * 0.045) + "s");
-
-    const marker = document.createElement("div");
-    marker.className = "legend-marker";
+    const stop = document.createElement("div");
+    stop.className = "legend-stop " + (i % 2 === 0 ? "near" : "far");
+    stop.style.setProperty("--d", (i * 0.055) + "s");
 
     if(it.icon){
       const icon = document.createElement("div");
@@ -732,30 +754,25 @@ function buildOverview(){
       const url = `url(${ICON_DATA[it.icon]})`;
       icon.style.webkitMaskImage = url;
       icon.style.maskImage = url;
-      marker.appendChild(icon);
+      stop.appendChild(icon);
     }
 
     const circle = document.createElement("div");
     circle.className = "legend-circle";
     circle.style.background = OVERVIEW_COLORS[i];
     circle.textContent = it.n;
-    marker.appendChild(circle);
+    stop.appendChild(circle);
 
     const connector = document.createElement("div");
     connector.className = "legend-connector";
-    marker.appendChild(connector);
+    stop.appendChild(connector);
 
-    item.appendChild(marker);
-
-    const content = document.createElement("div");
-    content.className = "legend-content";
     const label = document.createElement("div");
     label.className = "legend-label";
     label.textContent = it.label;
-    content.appendChild(label);
-    item.appendChild(content);
+    stop.appendChild(label);
 
-    list.appendChild(item);
+    row.appendChild(stop);
   });
 }
 buildOverview();
